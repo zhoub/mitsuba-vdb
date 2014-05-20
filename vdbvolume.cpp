@@ -1,3 +1,21 @@
+/*
+ *  OpenVDB Data Source for Mitsuba Render
+ *  Copyright (C) 2014 Bo Zhou<Bo.Schwarzstein@gmail.com>
+
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "vdbvolume.h"
 
 #include <openvdb/openvdb.h>
@@ -21,12 +39,16 @@ MTS_NAMESPACE_BEGIN
 
 VdbDataSource::VdbDataSource(const Properties &props)
     :
-    VolumeDataSource(props) {
+    VolumeDataSource(props),
+    m_customStepSize(0.0f) {
     openvdb::initialize();
 
     //
     m_filename = props.getString("filename");
     m_fieldname = props.getString("fieldname");
+    if( props.hasProperty("customStepSize") ) {
+        m_customStepSize = props.getFloat("customStepSize");
+    }
 
     std::map<std::string, VdbGridSet>::iterator gridSetItr = s_vdbGridPool.m_gridSets.find(m_filename);
     if (gridSetItr == s_vdbGridPool.m_gridSets.end()) {
@@ -52,6 +74,7 @@ VdbDataSource::VdbDataSource(Stream *stream, InstanceManager *manager)
     VolumeDataSource(stream, manager) {
     m_filename = stream->readString();
     m_fieldname = stream->readString();
+    m_customStepSize = stream->readFloat();
 }
 
 VdbDataSource::~VdbDataSource() {
@@ -90,10 +113,14 @@ void VdbDataSource::serialize(Stream *stream, InstanceManager *manager) const {
 
     stream->writeString(m_filename);
     stream->writeString(m_fieldname);
+    stream->writeFloat(m_customStepSize);
 }
 
 Float VdbDataSource::getStepSize() const {
     Float stepSize = 1.0f;
+    if ( m_customStepSize > 0.0f ) {
+        stepSize = m_customStepSize;
+    }
     std::map<std::string, VdbGridSet >::const_iterator gridSetItr = s_vdbGridPool.m_gridSets.find(m_filename);
     if (gridSetItr != s_vdbGridPool.m_gridSets.end()) {
         std::map<std::string, openvdb::GridBase::Ptr >::const_iterator gridItr = gridSetItr->second.m_grids.find(m_fieldname);
