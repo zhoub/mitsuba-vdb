@@ -39,8 +39,6 @@ public :
 
 	virtual bool supportsVectorLookups() const;
 
-	virtual Vector lookupVector(const Point &p) const;
-
     virtual void serialize(Stream *stream, InstanceManager *manager) const;
 
 	virtual Float getStepSize() const;

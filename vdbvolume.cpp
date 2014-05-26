@@ -101,11 +101,7 @@ Float VdbDataSource::lookupFloat(const Point &p) const {
 }
 
 bool VdbDataSource::supportsVectorLookups() const {
-    return true;
-}
-
-Vector VdbDataSource::lookupVector(const Point &p) const {
-    return Vector();
+    return false;
 }
 
 void VdbDataSource::serialize(Stream *stream, InstanceManager *manager) const {
